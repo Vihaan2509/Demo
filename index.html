@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pong Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #87CEEB; /* Sky blue background */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      background: #4CAF50; /* Green background for game area */
+      display: block;
+      margin: 0 auto;
+      border: 4px solid #000; /* Thicker black border */
+    }
+    .score {
+      color: white;
+      font-size: 48px;
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .score span {
+      padding: 0 20px;
+    }
+    .instructions {
+      color: white;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .start-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #FFD700; /* Golden yellow background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* Changed from center to flex-start */
+      z-index: 2000;
+    }
+    .start-screen h1 {
+      color: #4CAF50;
+      font-family: 'Fredoka One', cursive;
+      font-size: 120px; /* Made even larger */
+      margin-top: 40px;
+      margin-bottom: 0; /* Remove bottom margin as we'll position buttons independently */
+      text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+      letter-spacing: 3px;
+    }
+    .mode-button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      align-items: center;
+      margin-top: 52vh; /* Reduced from 55vh to move buttons closer to center */
+      transform: translateY(-50%);
+    }
+    .mode-button {
+      background-color: #ff4444; /* Changed to red */
+      color: white; /* Changed text to white for better contrast */
+      border: none;
+      padding: 20px 40px;
+      margin: 10px;
+      font-size: 28px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      min-width: 400px;
+    }
+    .mode-button:hover {
+      background-color: #ff0000; /* Darker red on hover */
+      transform: scale(1.05);
+    }
+    .hidden {
+      display: none;
+    }
+    .pause-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    .pause-button:hover {
+      background-color: #ddd;
+      transform: scale(1.05);
+    }
+    .pause-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .pause-overlay.visible {
+      display: flex;
+    }
+    .pause-overlay h1 {
+      color: white;
+      font-size: 48px;
+      margin-bottom: 40px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .resume-button {
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      font-size: 24px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    .resume-button:hover {
+      background-color: #ddd;
+      transform: scale(1.05);
+    }
+    .pause-overlay .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+    .exit-button {
+      background-color: #ff4444;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 24px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    .exit-button:hover {
+      background-color: #ff0000;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <h1>Pong Game</h1>
+    <div class="mode-button-container">
+      <button class="mode-button" onclick="startGame('single')">Single Player (Cursor)</button>
+      <button class="mode-button" onclick="startGame('two')">Two Players (W/S and ↑/↓)</button>
+    </div>
+  </div>
+
+  <div class="score hidden" id="scoreDisplay">
+    <span id="player1Score">0</span> - <span id="player2Score">0</span>
+  </div>
+  <button class="pause-button hidden" id="pauseButton">Pause</button>
+  <div class="pause-overlay hidden" id="pauseOverlay">
+    <h1>Game Paused</h1>
+    <div class="button-container">
+      <button class="resume-button" onclick="resumeGame()">Resume</button>
+      <button class="exit-button" onclick="exitGame()">Exit Game</button>
+    </div>
+  </div>
+  <canvas id="pong" width="800" height="400" class="hidden"></canvas>
+  <div class="instructions hidden" id="instructions">
+    <span id="player1Instructions">Player 1: Use mouse to move paddle</span>
+    <span id="player2Instructions"> | Player 2: Use ↑/↓ arrows to move paddle</span>
+  </div>
+
+  <script>
+    let gameMode = null;
+    let isPaused = false;
+    let animationFrameId = null;
+    let gameLoop = null;
+
+    function pauseGame() {
+      isPaused = true;
+      document.getElementById('pauseOverlay').classList.add('visible');
+      document.body.style.cursor = 'default';
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    function resumeGame() {
+      isPaused = false;
+      document.getElementById('pauseOverlay').classList.remove('visible');
+      if (gameMode === 'single') {
+        document.body.style.cursor = 'none';
+      }
+      if (!animationFrameId && gameLoop) {
+        gameLoop();
+      }
+    }
+
+    function exitGame() {
+      // Reset game state
+      isPaused = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      gameLoop = null;
+      
+      // Reset scores
+      document.getElementById('player1Score').textContent = '0';
+      document.getElementById('player2Score').textContent = '0';
+      
+      // Show cursor
+      document.body.style.cursor = 'default';
+      
+      // Hide game elements
+      document.getElementById('pauseOverlay').classList.remove('visible');
+      document.getElementById('scoreDisplay').classList.add('hidden');
+      document.getElementById('pong').classList.add('hidden');
+      document.getElementById('instructions').classList.add('hidden');
+      document.getElementById('pauseButton').classList.add('hidden');
+      
+      // Show start screen
+      document.getElementById('startScreen').classList.remove('hidden');
+    }
+
+    function startGame(mode) {
+      gameMode = mode;
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('scoreDisplay').classList.remove('hidden');
+      document.getElementById('pong').classList.remove('hidden');
+      document.getElementById('instructions').classList.remove('hidden');
+      document.getElementById('pauseButton').classList.remove('hidden');
+      
+      if (mode === 'single') {
+        document.getElementById('player1Instructions').textContent = 'Player 1: Use mouse to move paddle';
+        document.getElementById('player2Instructions').textContent = '';
+        document.body.style.cursor = 'none';
+      } else {
+        document.getElementById('player1Instructions').textContent = 'Player 1: Use W/S keys to move paddle';
+        document.getElementById('player2Instructions').textContent = ' | Player 2: Use ↑/↓ arrows to move paddle';
+        document.body.style.cursor = 'default';
+      }
+      
+      initGame();
+    }
+
+    function initGame() {
+      // Debug logging
+      console.log("Game starting in", gameMode, "mode...");
+      
+      // Get the canvas element and its 2D drawing context
+      const canvas = document.getElementById("pong");
+      if (!canvas) {
+        console.error("Canvas element not found!");
+        return;
+      }
+      
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        console.error("Could not get 2D context!");
+        return;
+      }
+
+      // Score elements
+      const player1ScoreElement = document.getElementById("player1Score");
+      const player2ScoreElement = document.getElementById("player2Score");
+      
+      // Initialize scores
+      let player1Score = 0;
+      let player2Score = 0;
+      
+      console.log("Canvas and context initialized successfully");
+
+      // Paddle dimensions and initial positions
+      const paddleWidth = 10;
+      const paddleHeight = 100;
+      let player1Y = canvas.height / 2 - paddleHeight / 2;
+      let player2Y = canvas.height / 2 - paddleHeight / 2;
+      const paddleSpeed = 6;
+
+      // Ball properties
+      const ball = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 10,
+        speed: 5,
+        dx: 5,
+        dy: 5
+      };
+
+      // Reset ball to center
+      function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        // Randomize initial direction
+        ball.dx = Math.random() > 0.5 ? 5 : -5;
+        ball.dy = (Math.random() * 4) - 2; // Random angle between -2 and 2
+      }
+
+      // Draw a rectangle (used for paddles and background)
+      function drawRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      }
+
+      // Draw a circle (used for the ball)
+      function drawCircle(x, y, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2, false);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Draw the center net
+      function drawNet() {
+        for (let i = 0; i < canvas.height; i += 15) {
+          drawRect(canvas.width / 2 - 1, i, 2, 10, "#000");
+        }
+      }
+
+      // Draw everything on the canvas
+      function draw() {
+        // Clear the canvas
+        drawRect(0, 0, canvas.width, canvas.height, "#4CAF50");
+
+        // Draw net
+        drawNet();
+
+        // Draw player 1 paddle (left, blue)
+        drawRect(0, player1Y, paddleWidth, paddleHeight, "#2196F3");
+
+        // Draw player 2 paddle (right, red)
+        drawRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight, "#f44336");
+
+        // Draw ball (white)
+        drawCircle(ball.x, ball.y, ball.radius, "#FFF");
+      }
+
+      // Track key presses for two-player mode
+      const keys = {
+        w: false,
+        s: false,
+        ArrowUp: false,
+        ArrowDown: false
+      };
+
+      // Handle key down events
+      function handleKeyDown(e) {
+        if (keys.hasOwnProperty(e.key)) {
+          keys[e.key] = true;
+        }
+      }
+
+      // Handle key up events
+      function handleKeyUp(e) {
+        if (keys.hasOwnProperty(e.key)) {
+          keys[e.key] = false;
+        }
+      }
+
+      // Track mouse movement for single-player mode
+      function handleMouseMove(e) {
+        if (gameMode === 'single') {
+          const rect = canvas.getBoundingClientRect();
+          const mouseY = e.clientY - rect.top;
+          player1Y = mouseY - paddleHeight / 2;
+          
+          // Keep paddle within canvas bounds
+          if (player1Y < 0) player1Y = 0;
+          if (player1Y + paddleHeight > canvas.height) {
+            player1Y = canvas.height - paddleHeight;
+          }
+        }
+      }
+
+      // Add event listeners based on game mode
+      if (gameMode === 'two') {
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+      } else {
+        canvas.addEventListener('mousemove', handleMouseMove);
+      }
+
+      // Update game logic
+      function update() {
+        if (gameMode === 'two') {
+          // Move player 1 paddle (W/S keys)
+          if (keys.w) {
+            player1Y -= paddleSpeed;
+            if (player1Y < 0) player1Y = 0;
+          }
+          if (keys.s) {
+            player1Y += paddleSpeed;
+            if (player1Y + paddleHeight > canvas.height) {
+              player1Y = canvas.height - paddleHeight;
+            }
+          }
+        }
+
+        // Move player 2 paddle (Arrow keys or AI)
+        if (gameMode === 'two') {
+          if (keys.ArrowUp) {
+            player2Y -= paddleSpeed;
+            if (player2Y < 0) player2Y = 0;
+          }
+          if (keys.ArrowDown) {
+            player2Y += paddleSpeed;
+            if (player2Y + paddleHeight > canvas.height) {
+              player2Y = canvas.height - paddleHeight;
+            }
+          }
+        } else {
+          // AI for single-player mode
+          if (player2Y + paddleHeight / 2 < ball.y) {
+            player2Y += paddleSpeed * 0.6;
+          } else {
+            player2Y -= paddleSpeed * 0.6;
+          }
+          if (player2Y < 0) player2Y = 0;
+          if (player2Y + paddleHeight > canvas.height) {
+            player2Y = canvas.height - paddleHeight;
+          }
+        }
+
+        // Move the ball
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Ball collision with top or bottom walls
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+          ball.dy *= -1; // Reverse Y direction
+        }
+
+        // Ball collision with player 1 paddle
+        if (
+          ball.x - ball.radius < paddleWidth &&
+          ball.y > player1Y &&
+          ball.y < player1Y + paddleHeight
+        ) {
+          ball.dx *= -1; // Reverse X direction
+        }
+
+        // Ball collision with player 2 paddle
+        if (
+          ball.x + ball.radius > canvas.width - paddleWidth &&
+          ball.y > player2Y &&
+          ball.y < player2Y + paddleHeight
+        ) {
+          ball.dx *= -1; // Reverse X direction
+        }
+
+        // Check for scoring
+        if (ball.x - ball.radius < 0) {
+          // Player 2 scores
+          player2Score++;
+          player2ScoreElement.textContent = player2Score;
+          resetBall();
+        } else if (ball.x + ball.radius > canvas.width) {
+          // Player 1 scores
+          player1Score++;
+          player1ScoreElement.textContent = player1Score;
+          resetBall();
+        }
+      }
+
+      // Add event listener for pause button
+      document.getElementById('pauseButton').addEventListener('click', pauseGame);
+
+      // Game loop: update and redraw everything
+      function loop() {
+        try {
+          if (!isPaused) {
+            update();
+            draw();
+            animationFrameId = requestAnimationFrame(loop); // Call loop again on the next frame
+          }
+        } catch (error) {
+          console.error("Error in game loop:", error);
+        }
+      }
+
+      // Store the loop function reference globally
+      gameLoop = loop;
+
+      // Initialize ball position
+      resetBall();
+
+      // Start the game
+      console.log("Starting game loop...");
+      loop();
+    }
+  </script>
+</body>
+</html>
