@@ -90,44 +90,47 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: #FFD700; /* Golden yellow background */
+      background-color: #FFD700;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start; /* Changed from center to flex-start */
+      justify-content: center;
       z-index: 2000;
+      padding: 20px;
     }
     .start-screen h1 {
       color: #4CAF50;
       font-family: 'Fredoka One', cursive;
-      font-size: 120px; /* Made even larger */
-      margin-top: 40px;
-      margin-bottom: 0; /* Remove bottom margin as we'll position buttons independently */
+      font-size: clamp(48px, 15vw, 120px);
+      margin-bottom: 40px;
+      text-align: center;
       text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
       letter-spacing: 3px;
     }
     .mode-button-container {
       display: flex;
       flex-direction: column;
-      gap: 25px;
+      gap: 20px;
       align-items: center;
-      margin-top: 52vh; /* Reduced from 55vh to move buttons closer to center */
-      transform: translateY(-50%);
+      width: 100%;
+      max-width: 500px;
     }
     .mode-button {
-      background-color: #ff4444; /* Changed to red */
-      color: white; /* Changed text to white for better contrast */
+      background-color: #ff4444;
+      color: white;
       border: none;
-      padding: 20px 40px;
-      margin: 10px;
-      font-size: 28px;
+      padding: 15px 30px;
+      font-size: clamp(18px, 5vw, 28px);
       cursor: pointer;
       border-radius: 8px;
       transition: all 0.3s ease;
-      min-width: 400px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
     }
     .mode-button:hover {
-      background-color: #ff0000; /* Darker red on hover */
+      background-color: #ff0000;
       transform: scale(1.05);
     }
     .hidden {
@@ -339,6 +342,7 @@
       if (isMobileDevice()) {
         const isPortrait = window.innerHeight > window.innerWidth;
         const orientationMessage = document.getElementById('orientationMessage');
+        const startScreen = document.getElementById('startScreen');
         
         console.log('Orientation check:', {
           isPortrait,
@@ -348,7 +352,7 @@
 
         if (isPortrait) {
           orientationMessage.style.display = 'flex';
-          document.getElementById('startScreen').style.display = 'none';
+          startScreen.style.display = 'none';
           document.getElementById('scoreDisplay').style.display = 'none';
           document.getElementById('pong').style.display = 'none';
           document.getElementById('instructions').style.display = 'none';
@@ -356,7 +360,7 @@
         } else {
           orientationMessage.style.display = 'none';
           if (gameMode === null) {
-            document.getElementById('startScreen').style.display = 'flex';
+            startScreen.style.display = 'flex';
           } else {
             document.getElementById('scoreDisplay').style.display = 'block';
             document.getElementById('pong').style.display = 'block';
