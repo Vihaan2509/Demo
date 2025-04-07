@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Pong Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
@@ -162,9 +164,97 @@
       background-color: #ff0000;
       transform: scale(1.05);
     }
+    .orientation-message {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #FFD700;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .orientation-message.visible {
+      display: flex;
+    }
+    
+    .orientation-message h2 {
+      color: #4CAF50;
+      font-family: 'Fredoka One', cursive;
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+    
+    .orientation-message p {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+    
+    .orientation-message img {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      canvas {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        max-height: 80vh;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+      }
+      
+      .score {
+        font-size: 36px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      
+      .instructions {
+        font-size: 14px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      
+      .pause-button {
+        padding: 8px 16px;
+        font-size: 16px;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .mode-button {
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
+    /* Prevent iOS bounce effect */
+    html, body {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
 </head>
 <body>
+  <div class="orientation-message" id="orientationMessage">
+    <h2>Please Rotate Your Device</h2>
+    <p>This game works best in landscape mode</p>
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzRjYWY1MCIgZD0iTTE1LjczIDMuNUg4LjI3TDMuNSAxNS4yM3Y1LjU0aDE3di01LjU0ek0xMiAxNy41Yy0uODMgMC0xLjUtLjY3LTEuNS0xLjVzLjY3LTEuNSAxLjUtMS41IDEuNS42NyAxLjUgMS41LS42NyAxLjUtMS41IDEuNXptMS01aC0ydi02aDJ6Ii8+PC9zdmc+" alt="Rotate Device">
+  </div>
+
   <div class="start-screen" id="startScreen">
     <h1>Pong Game</h1>
     <div class="mode-button-container">
@@ -244,21 +334,83 @@
       document.getElementById('startScreen').classList.remove('hidden');
     }
 
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function checkOrientation() {
+      if (isMobileDevice()) {
+        const orientationMessage = document.getElementById('orientationMessage');
+        const isPortrait = window.innerHeight > window.innerWidth;
+        
+        console.log('Checking orientation:', { isPortrait, height: window.innerHeight, width: window.innerWidth });
+        
+        if (isPortrait) {
+          orientationMessage.classList.add('visible');
+          document.getElementById('startScreen').style.display = 'none';
+          document.getElementById('scoreDisplay').style.display = 'none';
+          document.getElementById('pong').style.display = 'none';
+          document.getElementById('instructions').style.display = 'none';
+          document.getElementById('pauseButton').style.display = 'none';
+        } else {
+          orientationMessage.classList.remove('visible');
+          if (gameMode === null) {
+            document.getElementById('startScreen').style.display = 'flex';
+          } else {
+            document.getElementById('scoreDisplay').style.display = 'block';
+            document.getElementById('pong').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('pauseButton').style.display = 'block';
+          }
+        }
+      }
+    }
+
+    // Prevent iOS bounce effect
+    document.addEventListener('touchmove', function(e) {
+      if (e.target === document.body) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // Add event listeners for orientation changes
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    // Check orientation on page load
+    checkOrientation();
+
     function startGame(mode) {
+      console.log('Starting game in mode:', mode);
       gameMode = mode;
-      document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('scoreDisplay').classList.remove('hidden');
-      document.getElementById('pong').classList.remove('hidden');
-      document.getElementById('instructions').classList.remove('hidden');
-      document.getElementById('pauseButton').classList.remove('hidden');
+      
+      // Hide start screen
+      document.getElementById('startScreen').style.display = 'none';
+      
+      // Show game elements
+      document.getElementById('scoreDisplay').style.display = 'block';
+      document.getElementById('pong').style.display = 'block';
+      document.getElementById('instructions').style.display = 'block';
+      document.getElementById('pauseButton').style.display = 'block';
       
       if (mode === 'single') {
-        document.getElementById('player1Instructions').textContent = 'Player 1: Use mouse to move paddle';
+        if (isMobileDevice()) {
+          document.getElementById('player1Instructions').textContent = 'Player 1: Touch and drag to move paddle';
+        } else {
+          document.getElementById('player1Instructions').textContent = 'Player 1: Use mouse to move paddle';
+        }
         document.getElementById('player2Instructions').textContent = '';
-        document.body.style.cursor = 'none';
+        if (!isMobileDevice()) {
+          document.body.style.cursor = 'none';
+        }
       } else {
-        document.getElementById('player1Instructions').textContent = 'Player 1: Use W/S keys to move paddle';
-        document.getElementById('player2Instructions').textContent = ' | Player 2: Use ↑/↓ arrows to move paddle';
+        if (isMobileDevice()) {
+          document.getElementById('player1Instructions').textContent = 'Player 1: Touch left side to move up/down';
+          document.getElementById('player2Instructions').textContent = ' | Player 2: Touch right side to move up/down';
+        } else {
+          document.getElementById('player1Instructions').textContent = 'Player 1: Use W/S keys to move paddle';
+          document.getElementById('player2Instructions').textContent = ' | Player 2: Use ↑/↓ arrows to move paddle';
+        }
         document.body.style.cursor = 'default';
       }
       
@@ -507,6 +659,48 @@
       // Initialize ball position
       resetBall();
 
+      // Add touch controls for mobile
+      if (isMobileDevice()) {
+        console.log('Initializing touch controls');
+        
+        function handleTouch(e) {
+          e.preventDefault();
+          const rect = canvas.getBoundingClientRect();
+          const touchY = e.touches[0].clientY - rect.top;
+          const touchX = e.touches[0].clientX - rect.left;
+          
+          if (gameMode === 'single') {
+            // Single player mode - follow touch
+            player1Y = touchY - paddleHeight / 2;
+          } else {
+            // Two player mode - left/right side controls
+            if (touchX < canvas.width / 2) {
+              player1Y = touchY - paddleHeight / 2;
+            } else {
+              player2Y = touchY - paddleHeight / 2;
+            }
+          }
+          
+          // Keep paddles within bounds
+          if (player1Y < 0) player1Y = 0;
+          if (player1Y + paddleHeight > canvas.height) {
+            player1Y = canvas.height - paddleHeight;
+          }
+          if (player2Y < 0) player2Y = 0;
+          if (player2Y + paddleHeight > canvas.height) {
+            player2Y = canvas.height - paddleHeight;
+          }
+        }
+
+        // Remove any existing touch event listeners
+        canvas.removeEventListener('touchmove', handleTouch);
+        
+        // Add new touch event listener
+        canvas.addEventListener('touchmove', handleTouch, { passive: false });
+        
+        console.log('Touch controls initialized');
+      }
+
       // Start the game
       console.log("Starting game loop...");
       loop();
@@ -514,4 +708,3 @@
   </script>
 </body>
 </html>
-
