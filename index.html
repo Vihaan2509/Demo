@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimum-scale=1.0" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Pong Game</title>
@@ -18,12 +18,26 @@
       justify-content: center;
       min-height: 100vh;
       font-family: Arial, sans-serif;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    .game-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
     canvas {
       background: #4CAF50; /* Green background for game area */
       display: block;
       margin: 0 auto;
       border: 4px solid #000; /* Thicker black border */
+      touch-action: none;
     }
     .score {
       color: white;
@@ -204,33 +218,33 @@
     }
 
     @media (max-width: 768px) {
+      .game-container {
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
       canvas {
-        width: 100%;
-        height: auto;
-        max-width: 100%;
-        max-height: 80vh;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: none;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 70vh;
       }
       
       .score {
-        font-size: 36px;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
+        font-size: 32px;
+        margin: 10px 0;
       }
       
       .instructions {
-        font-size: 14px;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
+        font-size: 12px;
+        padding: 0 10px;
+        text-align: center;
       }
       
       .pause-button {
-        padding: 8px 16px;
-        font-size: 16px;
-        -webkit-tap-highlight-color: transparent;
+        padding: 6px 12px;
+        font-size: 14px;
+        right: 10px;
+        top: 10px;
       }
 
       .mode-button {
@@ -249,35 +263,37 @@
   </style>
 </head>
 <body>
-  <div class="orientation-message" id="orientationMessage">
-    <h2>Please Rotate Your Device</h2>
-    <p>This game works best in landscape mode</p>
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzRjYWY1MCIgZD0iTTE1LjczIDMuNUg4LjI3TDMuNSAxNS4yM3Y1LjU0aDE3di01LjU0ek0xMiAxNy41Yy0uODMgMC0xLjUtLjY3LTEuNS0xLjVzLjY3LTEuNSAxLjUtMS41IDEuNS42NyAxLjUgMS41LS42NyAxLjUtMS41IDEuNXptMS01aC0ydi02aDJ6Ii8+PC9zdmc+" alt="Rotate Device">
-  </div>
-
-  <div class="start-screen" id="startScreen">
-    <h1>Pong Game</h1>
-    <div class="mode-button-container">
-      <button class="mode-button" onclick="startGame('single')">Single Player (Cursor)</button>
-      <button class="mode-button" onclick="startGame('two')">Two Players (W/S and ↑/↓)</button>
+  <div class="game-container">
+    <div class="orientation-message" id="orientationMessage">
+      <h2>Please Rotate Your Device</h2>
+      <p>This game works best in landscape mode</p>
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzRjYWY1MCIgZD0iTTE1LjczIDMuNUg4LjI3TDMuNSAxNS4yM3Y1LjU0aDE3di01LjU0ek0xMiAxNy41Yy0uODMgMC0xLjUtLjY3LTEuNS0xLjVzLjY3LTEuNSAxLjUtMS41IDEuNS42NyAxLjUgMS41LS42NyAxLjUtMS41IDEuNXptMS01aC0ydi02aDJ6Ii8+PC9zdmc+" alt="Rotate Device">
     </div>
-  </div>
 
-  <div class="score hidden" id="scoreDisplay">
-    <span id="player1Score">0</span> - <span id="player2Score">0</span>
-  </div>
-  <button class="pause-button hidden" id="pauseButton">Pause</button>
-  <div class="pause-overlay hidden" id="pauseOverlay">
-    <h1>Game Paused</h1>
-    <div class="button-container">
-      <button class="resume-button" onclick="resumeGame()">Resume</button>
-      <button class="exit-button" onclick="exitGame()">Exit Game</button>
+    <div class="start-screen" id="startScreen">
+      <h1>Pong Game</h1>
+      <div class="mode-button-container">
+        <button class="mode-button" onclick="startGame('single')">Single Player (Cursor)</button>
+        <button class="mode-button" onclick="startGame('two')">Two Players (W/S and ↑/↓)</button>
+      </div>
     </div>
-  </div>
-  <canvas id="pong" width="800" height="400" class="hidden"></canvas>
-  <div class="instructions hidden" id="instructions">
-    <span id="player1Instructions">Player 1: Use mouse to move paddle</span>
-    <span id="player2Instructions"> | Player 2: Use ↑/↓ arrows to move paddle</span>
+
+    <div class="score hidden" id="scoreDisplay">
+      <span id="player1Score">0</span> - <span id="player2Score">0</span>
+    </div>
+    <button class="pause-button hidden" id="pauseButton">Pause</button>
+    <div class="pause-overlay hidden" id="pauseOverlay">
+      <h1>Game Paused</h1>
+      <div class="button-container">
+        <button class="resume-button" onclick="resumeGame()">Resume</button>
+        <button class="exit-button" onclick="exitGame()">Exit Game</button>
+      </div>
+    </div>
+    <canvas id="pong" width="800" height="400" class="hidden"></canvas>
+    <div class="instructions hidden" id="instructions">
+      <span id="player1Instructions">Player 1: Use mouse to move paddle</span>
+      <span id="player2Instructions"> | Player 2: Use ↑/↓ arrows to move paddle</span>
+    </div>
   </div>
 
   <script>
@@ -426,6 +442,32 @@
       if (!canvas) {
         console.error("Canvas element not found!");
         return;
+      }
+
+      // Set initial canvas size
+      if (isMobileDevice()) {
+        const container = document.querySelector('.game-container');
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        
+        // Calculate dimensions while maintaining aspect ratio
+        const aspectRatio = 2; // 800/400 = 2
+        let width = containerWidth;
+        let height = width / aspectRatio;
+        
+        // If height is too tall, scale down
+        if (height > containerHeight * 0.7) {
+          height = containerHeight * 0.7;
+          width = height * aspectRatio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        console.log('Canvas size adjusted:', { width, height, containerWidth, containerHeight });
+      } else {
+        canvas.width = 800;
+        canvas.height = 400;
       }
       
       const ctx = canvas.getContext("2d");
@@ -705,6 +747,18 @@
       console.log("Starting game loop...");
       loop();
     }
+
+    // Add window resize handler
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (gameMode !== null) {
+          initGame();
+        }
+        checkOrientation();
+      }, 250);
+    });
   </script>
 </body>
 </html>
