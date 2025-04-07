@@ -2,43 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Pong Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
-    body {
-      background-color: #87CEEB; /* Sky blue background */
+    * {
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       position: fixed;
-      width: 100%;
-      height: 100%;
     }
-    .game-container {
+
+    body {
+      background-color: #87CEEB;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+    }
+
+    #gameArea {
+      position: relative;
       width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
+
     canvas {
-      background: #4CAF50; /* Green background for game area */
+      background: #4CAF50;
       display: block;
-      margin: 0 auto;
-      border: 4px solid #000; /* Thicker black border */
+      border: 4px solid #000;
       touch-action: none;
+      -webkit-tap-highlight-color: transparent;
     }
+
+    .orientation-message {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #FFD700;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .orientation-message.visible {
+      display: flex;
+    }
+
     .score {
       color: white;
       font-size: 48px;
@@ -178,49 +207,10 @@
       background-color: #ff0000;
       transform: scale(1.05);
     }
-    .orientation-message {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #FFD700;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 3000;
-      text-align: center;
-      padding: 20px;
-    }
     
-    .orientation-message.visible {
-      display: flex;
-    }
-    
-    .orientation-message h2 {
-      color: #4CAF50;
-      font-family: 'Fredoka One', cursive;
-      font-size: 36px;
-      margin-bottom: 20px;
-    }
-    
-    .orientation-message p {
-      color: #333;
-      font-size: 24px;
-      margin-bottom: 30px;
-    }
-    
-    .orientation-message img {
-      width: 100px;
-      height: 100px;
-      margin-bottom: 20px;
-    }
-
     @media (max-width: 768px) {
-      .game-container {
+      #gameArea {
         padding: 10px;
-        box-sizing: border-box;
       }
 
       canvas {
@@ -251,19 +241,10 @@
         -webkit-tap-highlight-color: transparent;
       }
     }
-
-    /* Prevent iOS bounce effect */
-    html, body {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
   </style>
 </head>
 <body>
-  <div class="game-container">
+  <div id="gameArea">
     <div class="orientation-message" id="orientationMessage">
       <h2>Please Rotate Your Device</h2>
       <p>This game works best in landscape mode</p>
@@ -356,20 +337,24 @@
 
     function checkOrientation() {
       if (isMobileDevice()) {
-        const orientationMessage = document.getElementById('orientationMessage');
         const isPortrait = window.innerHeight > window.innerWidth;
+        const orientationMessage = document.getElementById('orientationMessage');
         
-        console.log('Checking orientation:', { isPortrait, height: window.innerHeight, width: window.innerWidth });
-        
+        console.log('Orientation check:', {
+          isPortrait,
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+
         if (isPortrait) {
-          orientationMessage.classList.add('visible');
+          orientationMessage.style.display = 'flex';
           document.getElementById('startScreen').style.display = 'none';
           document.getElementById('scoreDisplay').style.display = 'none';
           document.getElementById('pong').style.display = 'none';
           document.getElementById('instructions').style.display = 'none';
           document.getElementById('pauseButton').style.display = 'none';
         } else {
-          orientationMessage.classList.remove('visible');
+          orientationMessage.style.display = 'none';
           if (gameMode === null) {
             document.getElementById('startScreen').style.display = 'flex';
           } else {
@@ -390,10 +375,23 @@
     }, { passive: false });
 
     // Add event listeners for orientation changes
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('resize', () => {
+      checkOrientation();
+      if (gameMode !== null) {
+        initGame();
+      }
+    });
 
-    // Check orientation on page load
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        checkOrientation();
+        if (gameMode !== null) {
+          initGame();
+        }
+      }, 100);
+    });
+
+    // Initial checks
     checkOrientation();
 
     function startGame(mode) {
@@ -434,42 +432,40 @@
     }
 
     function initGame() {
-      // Debug logging
       console.log("Game starting in", gameMode, "mode...");
       
-      // Get the canvas element and its 2D drawing context
       const canvas = document.getElementById("pong");
       if (!canvas) {
         console.error("Canvas element not found!");
         return;
       }
 
-      // Set initial canvas size
-      if (isMobileDevice()) {
-        const container = document.querySelector('.game-container');
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
-        
-        // Calculate dimensions while maintaining aspect ratio
-        const aspectRatio = 2; // 800/400 = 2
-        let width = containerWidth;
-        let height = width / aspectRatio;
-        
-        // If height is too tall, scale down
-        if (height > containerHeight * 0.7) {
-          height = containerHeight * 0.7;
-          width = height * aspectRatio;
-        }
-        
-        canvas.width = width;
+      // Set canvas size based on screen orientation
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const gameArea = document.getElementById('gameArea');
+      const gameAreaWidth = gameArea.clientWidth;
+      const gameAreaHeight = gameArea.clientHeight;
+
+      if (isLandscape) {
+        // Landscape mode - use height as reference
+        const height = Math.min(gameAreaHeight * 0.8, gameAreaWidth * 0.5);
+        canvas.width = height * 2;
         canvas.height = height;
-        
-        console.log('Canvas size adjusted:', { width, height, containerWidth, containerHeight });
       } else {
-        canvas.width = 800;
-        canvas.height = 400;
+        // Portrait mode - use width as reference
+        const width = Math.min(gameAreaWidth * 0.9, gameAreaHeight * 0.5);
+        canvas.width = width;
+        canvas.height = width / 2;
       }
-      
+
+      console.log('Canvas size:', {
+        width: canvas.width,
+        height: canvas.height,
+        gameAreaWidth,
+        gameAreaHeight,
+        isLandscape
+      });
+
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         console.error("Could not get 2D context!");
@@ -747,18 +743,6 @@
       console.log("Starting game loop...");
       loop();
     }
-
-    // Add window resize handler
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        if (gameMode !== null) {
-          initGame();
-        }
-        checkOrientation();
-      }, 250);
-    });
   </script>
 </body>
 </html>
