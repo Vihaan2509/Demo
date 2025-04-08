@@ -46,8 +46,33 @@
       border: 4px solid #000;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
-      width: 100%;
-      height: auto;
+    }
+
+    /* Desktop styles */
+    @media (min-width: 768px) {
+      canvas {
+        width: 800px;
+        height: 450px; /* 16:9 aspect ratio */
+      }
+    }
+
+    /* Mobile styles */
+    @media (max-width: 767px) {
+      @media (orientation: portrait) {
+        canvas {
+          width: 100%;
+          height: 177.78vw; /* 16:9 aspect ratio */
+          max-height: 100vh;
+        }
+      }
+
+      @media (orientation: landscape) {
+        canvas {
+          width: 56.25vh; /* 16:9 aspect ratio */
+          height: 100vh;
+          max-width: 100vw;
+        }
+      }
     }
 
     .orientation-message {
@@ -356,7 +381,8 @@
     }
 
     function checkOrientation() {
-      if (isMobileDevice()) {
+      const isMobile = isMobileDevice();
+      if (isMobile) {
         const isPortrait = window.innerHeight > window.innerWidth;
         const orientationMessage = document.getElementById('orientationMessage');
         const startScreen = document.getElementById('startScreen');
@@ -364,7 +390,8 @@
         console.log('Orientation check:', {
           isPortrait,
           width: window.innerWidth,
-          height: window.innerHeight
+          height: window.innerHeight,
+          isMobile
         });
 
         if (isPortrait) {
@@ -384,6 +411,17 @@
             document.getElementById('instructions').style.display = 'block';
             document.getElementById('pauseButton').style.display = 'block';
           }
+        }
+      } else {
+        // On desktop, always show game elements
+        document.getElementById('orientationMessage').style.display = 'none';
+        if (gameMode === null) {
+          document.getElementById('startScreen').style.display = 'flex';
+        } else {
+          document.getElementById('scoreDisplay').style.display = 'block';
+          document.getElementById('pong').style.display = 'block';
+          document.getElementById('instructions').style.display = 'block';
+          document.getElementById('pauseButton').style.display = 'block';
         }
       }
     }
@@ -461,24 +499,30 @@
         return;
       }
 
-      // Set canvas size based on screen orientation
+      const isMobile = isMobileDevice();
       const isLandscape = window.innerWidth > window.innerHeight;
       const gameArea = document.getElementById('gameArea');
       const gameAreaWidth = gameArea.clientWidth;
       const gameAreaHeight = gameArea.clientHeight;
 
-      if (isLandscape) {
-        // Landscape mode - use height as reference
-        const height = gameAreaHeight;
-        const width = height * (16/9); // 16:9 aspect ratio
-        canvas.width = width;
-        canvas.height = height;
+      if (isMobile) {
+        if (isLandscape) {
+          // Mobile landscape - use height as reference
+          const height = gameAreaHeight;
+          const width = height * (16/9); // 16:9 aspect ratio
+          canvas.width = width;
+          canvas.height = height;
+        } else {
+          // Mobile portrait - use width as reference
+          const width = gameAreaWidth;
+          const height = width * (16/9); // 16:9 aspect ratio
+          canvas.width = width;
+          canvas.height = height;
+        }
       } else {
-        // Portrait mode - use width as reference
-        const width = gameAreaWidth;
-        const height = width * (16/9); // 16:9 aspect ratio
-        canvas.width = width;
-        canvas.height = height;
+        // Desktop - use fixed dimensions with 16:9 ratio
+        canvas.width = 800;
+        canvas.height = 450;
       }
 
       console.log('Canvas size:', {
@@ -486,7 +530,8 @@
         height: canvas.height,
         gameAreaWidth,
         gameAreaHeight,
-        isLandscape
+        isLandscape,
+        isMobile
       });
 
       const ctx = canvas.getContext("2d");
