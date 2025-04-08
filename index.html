@@ -350,8 +350,14 @@
     let animationFrameId = null;
     let gameLoop = null;
     let gameInitialized = false;
+    let keyHandlers = {
+      keydown: null,
+      keyup: null
+    };
+    let mouseHandler = null;
 
     function pauseGame() {
+      console.log('Pausing game...');
       isPaused = true;
       document.getElementById('pauseOverlay').classList.add('visible');
       document.body.style.cursor = 'default';
@@ -362,6 +368,7 @@
     }
 
     function resumeGame() {
+      console.log('Resuming game...');
       isPaused = false;
       document.getElementById('pauseOverlay').classList.remove('visible');
       if (gameMode === 'single') {
@@ -375,45 +382,47 @@
     function exitGame() {
       console.log('Exiting game...');
       
-      // Reset game state
-      isPaused = false;
-      gameMode = null;
-      gameInitialized = false;
-      
-      // Cancel any ongoing animation
+      // Stop the game loop
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
       }
+      
+      // Reset game state
+      isPaused = false;
+      gameMode = null;
+      gameInitialized = false;
       gameLoop = null;
       
-      // Reset scores
-      document.getElementById('player1Score').textContent = '0';
-      document.getElementById('player2Score').textContent = '0';
+      // Remove event listeners
+      if (keyHandlers.keydown) {
+        document.removeEventListener('keydown', keyHandlers.keydown);
+        keyHandlers.keydown = null;
+      }
+      if (keyHandlers.keyup) {
+        document.removeEventListener('keyup', keyHandlers.keyup);
+        keyHandlers.keyup = null;
+      }
+      if (mouseHandler) {
+        const canvas = document.getElementById('pong');
+        if (canvas) {
+          canvas.removeEventListener('mousemove', mouseHandler);
+          mouseHandler = null;
+        }
+      }
       
-      // Show cursor
-      document.body.style.cursor = 'default';
-      
-      // Hide game elements
+      // Reset UI
       document.getElementById('pauseOverlay').classList.remove('visible');
       document.getElementById('scoreDisplay').classList.add('hidden');
       document.getElementById('pong').classList.add('hidden');
       document.getElementById('instructions').classList.add('hidden');
       document.getElementById('pauseButton').classList.add('hidden');
-      
-      // Show start screen
       document.getElementById('startScreen').style.display = 'flex';
+      document.body.style.cursor = 'default';
       
-      // Remove event listeners
-      if (gameMode === 'two') {
-        document.removeEventListener('keydown', handleKeyDown);
-        document.removeEventListener('keyup', handleKeyUp);
-      } else {
-        const canvas = document.getElementById('pong');
-        if (canvas) {
-          canvas.removeEventListener('mousemove', handleMouseMove);
-        }
-      }
+      // Reset scores
+      document.getElementById('player1Score').textContent = '0';
+      document.getElementById('player2Score').textContent = '0';
       
       console.log('Game exited successfully');
     }
