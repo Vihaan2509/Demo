@@ -349,6 +349,7 @@
     let isPaused = false;
     let animationFrameId = null;
     let gameLoop = null;
+    let gameInitialized = false;
 
     function pauseGame() {
       isPaused = true;
@@ -372,8 +373,14 @@
     }
 
     function exitGame() {
+      console.log('Exiting game...');
+      
       // Reset game state
       isPaused = false;
+      gameMode = null;
+      gameInitialized = false;
+      
+      // Cancel any ongoing animation
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
@@ -395,7 +402,20 @@
       document.getElementById('pauseButton').classList.add('hidden');
       
       // Show start screen
-      document.getElementById('startScreen').classList.remove('hidden');
+      document.getElementById('startScreen').style.display = 'flex';
+      
+      // Remove event listeners
+      if (gameMode === 'two') {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('keyup', handleKeyUp);
+      } else {
+        const canvas = document.getElementById('pong');
+        if (canvas) {
+          canvas.removeEventListener('mousemove', handleMouseMove);
+        }
+      }
+      
+      console.log('Game exited successfully');
     }
 
     function isMobileDevice() {
@@ -478,15 +498,16 @@
     function startGame(mode) {
       console.log('Starting game in mode:', mode);
       gameMode = mode;
+      gameInitialized = true;
       
       // Hide start screen
       document.getElementById('startScreen').style.display = 'none';
       
       // Show game elements
-      document.getElementById('scoreDisplay').style.display = 'block';
-      document.getElementById('pong').style.display = 'block';
-      document.getElementById('instructions').style.display = 'block';
-      document.getElementById('pauseButton').style.display = 'block';
+      document.getElementById('scoreDisplay').classList.remove('hidden');
+      document.getElementById('pong').classList.remove('hidden');
+      document.getElementById('instructions').classList.remove('hidden');
+      document.getElementById('pauseButton').classList.remove('hidden');
       
       if (mode === 'single') {
         if (isMobileDevice()) {
